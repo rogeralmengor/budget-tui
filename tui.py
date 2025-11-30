@@ -13,7 +13,7 @@ import os
 import sys
 
 # Add after imports
-EXPENSE_CATEGORIES = ["Food", "Transport", "Housing", "Entertainment", "Healthcare", "Shopping", "Other"]
+EXPENSE_CATEGORIES = ["Food", "Transport", "Housing", "Entertainment", "Kids", "Healthcare", "Shopping", "Other"]
 INCOME_CATEGORIES = ["Salary", "Freelance", "Investment", "Gift", "Bonus", "Other"]
 
 # ─────────────────────────────────────────────
@@ -744,6 +744,10 @@ class BudgetApp(App):
             monthly_expenses = self.db.get_monthly_expenses(self.current_year, self.current_month)
             monthly_incomes = self.db.get_monthly_incomes(self.current_year, self.current_month)
 
+            # Sort by date (newest first)
+            monthly_expenses.sort(key=lambda x: x.date, reverse=True)
+            monthly_incomes.sort(key=lambda x: x.date, reverse=True)
+
             total_expenses = sum(e.amount for e in monthly_expenses)
             total_incomes = sum(i.amount for i in monthly_incomes)
             balance = total_incomes - total_expenses
@@ -793,7 +797,7 @@ class BudgetApp(App):
                 f"[{balance_color}]{balance_bar}[/{balance_color}]"
             )
 
-            # Update tables
+            # Update tables with dynamic heights
             exp_table = self.query_one("#expense-table", DataTable)
             inc_table = self.query_one("#income-table", DataTable)
 
@@ -808,9 +812,16 @@ class BudgetApp(App):
             for i in monthly_incomes:
                 inc_table.add_row(str(i.date), i.description, f"${i.amount:.2f}", i.category)
 
+            # Dynamically adjust table heights based on row count
+            # Show all rows if <= 20, otherwise cap at 20 with scrolling
+            exp_height = min(len(monthly_expenses) + 2, 20)  # +2 for header
+            inc_height = min(len(monthly_incomes) + 2, 20)
+            
+            exp_table.styles.height = exp_height
+            inc_table.styles.height = inc_height
+
         except Exception as e:
             self.notify(f"✗ Error refreshing data: {e}", severity="error")
-
 
 # ─────────────────────────────────────────────
 # Run App
