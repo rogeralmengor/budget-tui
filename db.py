@@ -11,7 +11,7 @@ class Expense(Base):
     date = Column(Date, nullable=False)
     description = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
-    category = Column(String, nullable=False, default="Other")  # New category column
+    category = Column(String, nullable=False, default="Other")
 
 class Income(Base):
     __tablename__ = "incomes"
@@ -19,7 +19,7 @@ class Income(Base):
     date = Column(Date, nullable=False)
     description = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
-    category = Column(String, nullable=False, default="Salary")  # New category column
+    category = Column(String, nullable=False, default="Salary")
 
 
 class Database:
@@ -49,10 +49,13 @@ class Database:
     # ─────────────────────────────
     # UPDATE METHODS
     # ─────────────────────────────
-    def update_expense(self, expense_id, description=None, amount=None, category=None):
+    def update_expense(self, expense_id, date=None, description=None, amount=None, category=None):
+        """Update an expense entry. Now supports date editing."""
         exp = self.session.query(Expense).filter_by(id=expense_id).first()
         if not exp:
             return False
+        if date is not None:
+            exp.date = date
         if description:
             exp.description = description
         if amount is not None:
@@ -62,16 +65,40 @@ class Database:
         self.session.commit()
         return True
 
-    def update_income(self, income_id, description=None, amount=None, category=None):
+    def update_income(self, income_id, date=None, description=None, amount=None, category=None):
+        """Update an income entry. Now supports date editing."""
         inc = self.session.query(Income).filter_by(id=income_id).first()
         if not inc:
             return False
+        if date is not None:
+            inc.date = date
         if description:
             inc.description = description
         if amount is not None:
             inc.amount = amount
         if category:
             inc.category = category
+        self.session.commit()
+        return True
+
+    # ─────────────────────────────
+    # DELETE METHODS
+    # ─────────────────────────────
+    def delete_expense(self, expense_id):
+        """Delete an expense by ID"""
+        exp = self.session.query(Expense).filter_by(id=expense_id).first()
+        if not exp:
+            return False
+        self.session.delete(exp)
+        self.session.commit()
+        return True
+
+    def delete_income(self, income_id):
+        """Delete an income by ID"""
+        inc = self.session.query(Income).filter_by(id=income_id).first()
+        if not inc:
+            return False
+        self.session.delete(inc)
         self.session.commit()
         return True
 
